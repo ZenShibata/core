@@ -1,4 +1,4 @@
-import { APIUser } from "discord-api-types/v10";
+import { APIUser, Routes } from "discord-api-types/v10";
 import { BaseManager } from "./BaseManager";
 import { User } from "../Structures/User";
 import { Client } from "../Structures/Client";
@@ -23,6 +23,16 @@ export class UserManager extends BaseManager<APIUser, User> {
             deserialize: value => new User(JSON.parse(value as string) as APIUser, this.client),
             serialize: value => JSON.stringify(value)
         });
+    }
+
+    public async fetchMe({ force = false, cache = true }: { force?: boolean; cache?: boolean }): Promise<User> {
+        if (force) {
+            const me = await this.client.rest.get(Routes.user()) as APIUser;
+            return new User(await this._add(this.client.options.clientId!, me, cache), this.client);
+        }
+
+        const existing = await this.cache.get(this.client.options.clientId!);
+        return existing ?? new User(await this._add(this.client.options.clientId!, await this.client.rest.get(Routes.user()) as APIUser, cache), this.client);
     }
 
     public override _patch(old: User, data: APIUser): APIUser {
