@@ -20,12 +20,8 @@ export class UserManager extends BaseManager<APIUser, User> {
         return new RedisCollection({
             hash: MakeCacheNameFunction(this.name, this.client.options.clientId!, this.client.options.gatewayRouting ?? false),
             redis: this.client.redis,
-            deserialize(value) {
-                return new User(JSON.parse(value as string) as APIUser);
-            },
-            serialize(value) {
-                return JSON.stringify(value);
-            }
+            deserialize: value => new User(JSON.parse(value as string) as APIUser, this.client),
+            serialize: value => JSON.stringify(value)
         });
     }
 
