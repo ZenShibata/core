@@ -4,13 +4,14 @@ import { User } from "../Structures/User";
 import { Client } from "../Structures/Client";
 import { RedisCollection } from "@nezuchan/redis-collection";
 import { MakeCacheNameFunction } from "../Utilities/Functions";
+import { KeyConstants } from "../Utilities/Enums/KeyConstants";
 
 export class UserManager extends BaseManager<APIUser, User> {
     public constructor(
         client: Client
     ) {
         super(
-            "users",
+            KeyConstants.USER_KEY,
             client
         );
     }
