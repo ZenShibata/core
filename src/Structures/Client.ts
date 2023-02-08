@@ -2,15 +2,20 @@ import EventEmitter from "node:events";
 import { REST } from "@discordjs/rest";
 import { Cluster, Redis } from "ioredis";
 import { ClientOptions } from "../Typings";
-import { UserManager } from "../Managers/UserManager";
 import { RabbitConstants } from "../Utilities/Enums/RabbitConstants";
 import { RoutingPublisher, RoutingSubscriber, createAmqp } from "@nezuchan/cordis-brokers";
+
+import { UserManager } from "../Managers/UserManager";
+import { GuildManager } from "../Managers/GuildManager";
+import { ChannelManager } from "../Managers/ChannelManager";
 
 export class Client extends EventEmitter {
     public rest = new REST();
     public redis: Cluster | Redis;
 
     public users = new UserManager(this);
+    public guilds = new GuildManager(this);
+    public channels = new ChannelManager(this);
 
     public amqp!: {
         sender: RoutingPublisher<string, Record<string, any>>;
