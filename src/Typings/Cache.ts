@@ -2,9 +2,12 @@ import { RedisCollection } from "@nezuchan/redis-collection";
 import { UserManager } from "../Managers/UserManager";
 import { BaseManager } from "../Managers/BaseManager";
 import { User } from "../Structures/User";
+import { ChannelManager } from "../Managers/ChannelManager";
+import { BaseChannel } from "../Structures/BaseChannel";
 
 export interface Caches {
     UserManager: [manager: typeof UserManager, holds: typeof User];
+    ChannelManager: [manager: typeof ChannelManager, holds: typeof BaseChannel];
 }
 
 export type CacheConstructors = {
