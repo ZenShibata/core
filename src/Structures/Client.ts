@@ -1,3 +1,4 @@
+/* eslint-disable no-negated-condition */
 import EventEmitter from "node:events";
 import { REST } from "@discordjs/rest";
 import { Cluster, Redis } from "ioredis";
@@ -10,7 +11,11 @@ import { GuildManager } from "../Managers/GuildManager";
 import { ChannelManager } from "../Managers/ChannelManager";
 
 export class Client extends EventEmitter {
-    public rest = new REST();
+    public rest = new REST({
+        api: process.env.PROXY ?? process.env.NIRN_PROXY ?? "https://discord.com/api",
+        rejectOnRateLimit: (process.env.PROXY ?? process.env.NIRN_PROXY) !== undefined ? () => false : null
+    });
+
     public redis: Cluster | Redis;
 
     public users = new UserManager(this);
