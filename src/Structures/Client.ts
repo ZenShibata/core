@@ -9,6 +9,8 @@ import { RoutingPublisher, RoutingSubscriber, createAmqp } from "@nezuchan/cordi
 import { UserManager } from "../Managers/UserManager";
 import { GuildManager } from "../Managers/GuildManager";
 import { ChannelManager } from "../Managers/ChannelManager";
+import { Message } from "./Message";
+import { APIMessage, RESTPostAPIChannelMessageJSONBody, Routes } from "discord-api-types/v10";
 
 export class Client extends EventEmitter {
     public rest = new REST({
@@ -64,5 +66,11 @@ export class Client extends EventEmitter {
         await this.amqp.sender.init({ name: RabbitConstants.QUEUE_SEND, useExchangeBinding: true });
 
         this.rest.setToken(this.options.token!);
+    }
+
+    public async sendMessage(options: RESTPostAPIChannelMessageJSONBody, channelId: string): Promise<Message> {
+        return this.rest.post(Routes.channelMessages(channelId), {
+            body: options
+        }).then(x => new Message(x as APIMessage, this));
     }
 }
