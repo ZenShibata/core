@@ -1,11 +1,11 @@
 import { APIChannel, APIMessage, RESTPostAPIChannelMessageJSONBody, Routes } from "discord-api-types/v10";
 import { Base } from "./Base";
+import { Message } from "./Message";
 
 export class BaseChannel extends Base<APIChannel> {
-    // TODO: Use Message class.
-    public send(options: RESTPostAPIChannelMessageJSONBody): Promise<APIMessage> {
+    public async send(options: RESTPostAPIChannelMessageJSONBody): Promise<Message> {
         return this.client.rest.post(Routes.channelMessages(this.id), {
             body: options
-        }) as Promise<APIMessage>;
+        }).then(x => new Message(x as APIMessage, this.client));
     }
 }
