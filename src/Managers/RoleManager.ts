@@ -25,7 +25,11 @@ export class RoleManager extends BaseManager<APIRole, Role> {
         });
     }
 
-    public async resolve({ id, keys }: { id: string; keys?: string[] }): Promise<Role | null> {
+    public async resolve({ id, keys, guildId }: { id: string; keys?: string[]; guildId: string }): Promise<Role | null> {
+        if (guildId) {
+            const role = await this.cache.get(`${guildId}:${id}`);
+            return role ?? null;
+        }
         keys ??= await this.client.redis.smembers(`${KeyConstants.ROLE_KEY}${KeyConstants.KEYS_SUFFIX}`);
         const key = keys.find(key => key.includes(id));
         if (!key) return null;
