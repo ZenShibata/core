@@ -13,6 +13,7 @@ import { Message } from "./Message";
 import { APIMessage, RESTPostAPIChannelMessageJSONBody, Routes } from "discord-api-types/v10";
 import { RoleManager } from "../Managers/RoleManager";
 import { GuildMemberManager } from "../Managers/GuildMemberManager";
+import { VoiceStateManager } from "../Managers/VoiceStateManager";
 
 export class Client extends EventEmitter {
     public rest = new REST({
@@ -27,6 +28,7 @@ export class Client extends EventEmitter {
     public channels = new ChannelManager(this);
     public roles = new RoleManager(this);
     public members = new GuildMemberManager(this);
+    public voiceStates = new VoiceStateManager(this);
 
     public amqp!: {
         sender: RoutingPublisher<string, Record<string, any>>;
@@ -68,7 +70,6 @@ export class Client extends EventEmitter {
         }
 
         await this.amqp.sender.init({ name: RabbitConstants.QUEUE_SEND, useExchangeBinding: true });
-
         this.rest.setToken(this.options.token!);
     }
 

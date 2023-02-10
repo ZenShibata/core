@@ -7,6 +7,7 @@ import { Message } from "../Message";
 import { CommandInteraction } from "./CommandInteraction";
 import { BaseContextMenuInteraction } from "./BaseContextMenuInteraction";
 import { AutoCompleteInteraction } from "./AutoCompleteInteraction";
+import { MessageComponentInteraction } from "./MessageComponentInteraction";
 
 export class BaseInteraction extends Base<GatewayInteractionCreateDispatchData> {
     public deferred = false;
@@ -115,5 +116,9 @@ export class BaseInteraction extends Base<GatewayInteractionCreateDispatchData> 
 
     public isAutoCompleteInteraction(): this is AutoCompleteInteraction {
         return this.data.type === InteractionType.ApplicationCommandAutocomplete;
+    }
+
+    public isComponentInteraction(): this is MessageComponentInteraction {
+        return this.data.type === InteractionType.MessageComponent;
     }
 }
