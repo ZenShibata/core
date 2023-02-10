@@ -1,6 +1,8 @@
 import { APIMessage, GatewayMessageCreateDispatchData, RESTPatchAPIChannelMessageJSONBody, Routes } from "discord-api-types/v10";
 import { Base } from "./Base";
 import { Guild } from "./Guild";
+import { User } from "./User";
+import { GuildMember } from "./GuildMember";
 
 export class Message extends Base<APIMessage | GatewayMessageCreateDispatchData> {
     public get content(): string {
@@ -17,6 +19,14 @@ export class Message extends Base<APIMessage | GatewayMessageCreateDispatchData>
 
     public async fetchGuild(): Promise<Guild | null> {
         return this.guildId ? this.client.guilds.fetch({ id: this.guildId, cache: true }) : null;
+    }
+
+    public get author(): User {
+        return new User(this.data.author, this.client);
+    }
+
+    public resolveMember(): Promise<GuildMember | null> {
+        return this.guildId ? this.client.members.resolve({ id: this.author.id, guildId: this.guildId }) : Promise.resolve(null);
     }
 
     public async edit(options: RESTPatchAPIChannelMessageJSONBody): Promise<Message> {

@@ -11,6 +11,8 @@ import { GuildManager } from "../Managers/GuildManager";
 import { ChannelManager } from "../Managers/ChannelManager";
 import { Message } from "./Message";
 import { APIMessage, RESTPostAPIChannelMessageJSONBody, Routes } from "discord-api-types/v10";
+import { RoleManager } from "../Managers/RoleManager";
+import { GuildMemberManager } from "../Managers/GuildMemberManager";
 
 export class Client extends EventEmitter {
     public rest = new REST({
@@ -23,6 +25,8 @@ export class Client extends EventEmitter {
     public users = new UserManager(this);
     public guilds = new GuildManager(this);
     public channels = new ChannelManager(this);
+    public roles = new RoleManager(this);
+    public members = new GuildMemberManager(this);
 
     public amqp!: {
         sender: RoutingPublisher<string, Record<string, any>>;

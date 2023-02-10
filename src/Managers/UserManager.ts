@@ -35,6 +35,16 @@ export class UserManager extends BaseManager<APIUser, User> {
         return existing ?? new User(await this._add(this.client.options.clientId!, await this.client.rest.get(Routes.user()) as APIUser, cache), this.client);
     }
 
+    public async fetch({ force = false, cache = true, id }: { force?: boolean; cache?: boolean; id: string }): Promise<User> {
+        if (force) {
+            const target = await this.client.rest.get(Routes.user(id)) as APIUser;
+            return new User(await this._add(id, target, cache), this.client);
+        }
+
+        const existing = await this.cache.get(id);
+        return existing ?? new User(await this._add(id, await this.client.rest.get(Routes.user(id)) as APIUser, cache), this.client);
+    }
+
     public override _patch(old: User, data: APIUser): APIUser {
         return data;
     }
