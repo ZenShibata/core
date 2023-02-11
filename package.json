@@ -1,13 +1,20 @@
 {
   "name": "@nezuchan/core",
   "version": "0.1.0",
-  "description": "A TypeScript template project.",
-  "main": "dist",
+  "description": "A Core Low Level API for creating Discord bots using @nezuchan/nezu-gateway.",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint src --ext ts",
     "lint:fix": "eslint src --fix --ext ts",
     "build": "rimraf dist && tsc && gen-esm-wrapper ./dist/index.js ./dist/index.mjs"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "types": "./dist/index.d.ts",
+    "import": "./dist/index.mjs",
+    "require": "./dist/index.js"
   },
   "files": [
     "dist/**",
