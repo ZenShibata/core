@@ -23,12 +23,12 @@ export class Client extends EventEmitter {
 
     public redis: Cluster | Redis;
 
-    public users = new UserManager(this);
-    public guilds = new GuildManager(this);
-    public channels = new ChannelManager(this);
-    public roles = new RoleManager(this);
-    public members = new GuildMemberManager(this);
-    public voiceStates = new VoiceStateManager(this);
+    public users: UserManager;
+    public guilds: GuildManager;
+    public channels: ChannelManager;
+    public roles: RoleManager;
+    public members: GuildMemberManager;
+    public voiceStates: VoiceStateManager;
 
     public amqp!: {
         sender: RoutingPublisher<string, Record<string, any>>;
@@ -53,17 +53,24 @@ export class Client extends EventEmitter {
 
         options.token ??= process.env.DISCORD_TOKEN;
         options.clientId ??= Buffer.from(options.token!.split(".")[0], "base64").toString();
+
+        this.members = new GuildMemberManager(this);
+        this.voiceStates = new VoiceStateManager(this);
+        this.channels = new ChannelManager(this);
+        this.guilds = new GuildManager(this);
+        this.users = new UserManager(this);
+        this.roles = new RoleManager(this);
     }
 
     public async connect(): Promise<void> {
-        const { channel } = await createAmqp(process.env.AMQP_HOST ?? process.env.AMQP_URL!);
+        const { channel } = await createAmqp(process.env.AMQP_HOST ?? process.env.AMQP_URL ?? this.options.amqpUrl);
 
         this.amqp = {
             sender: new RoutingPublisher(channel),
             receiver: new RoutingSubscriber(channel)
         };
 
-        if (process.env.USE_ROUTING === "true") {
+        if (this.options.gatewayRouting || process.env.USE_ROUTING === "true") {
             await this.amqp.receiver.init({ name: RabbitConstants.QUEUE_RECV, useExchangeBinding: true, exchangeType: "direct", keys: this.options.clientId!, durable: true });
         } else {
             await this.amqp.receiver.init({ name: RabbitConstants.QUEUE_RECV, useExchangeBinding: true, exchangeType: "fanout", keys: "#", durable: true });
