@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 /* eslint-disable no-nested-ternary */
 import { APIGuildMember, GatewayGuildMemberRemoveDispatch } from "discord-api-types/v10";
 import { Base } from "./Base";
@@ -7,6 +8,10 @@ import { KeyConstants } from "../Utilities/Enums/KeyConstants";
 import { VoiceState } from "./VoiceState";
 
 export class GuildMember extends Base<APIGuildMember | GatewayGuildMemberRemoveDispatch["d"]> {
+    public get id(): string {
+        return this.data.id ?? this.data.user!.id;
+    }
+
     public get nickname(): string | null | undefined {
         return "nick" in this.data ? this.data.nick : null;
     }
