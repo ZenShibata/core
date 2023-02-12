@@ -16,9 +16,9 @@ jobs:
           git fetch origin main
           git checkout main
       - name: Installing dependencies
-        run: yarn install --frozen-lockfile
+        run: npm install
       - name: Compile source
-        run: yarn build
+        run: npm run build
       - name: Publish source
         run: |
           npm publish --access public || true
