@@ -17,6 +17,10 @@ export class Message extends Base<APIMessage | GatewayMessageCreateDispatchData 
         return "channel_id" in this.data ? this.data.channel_id : null;
     }
 
+    public get webhookId(): string | undefined {
+        return "webhook_id" in this.data ? this.data.webhook_id : undefined;
+    }
+
     public async fetchGuild(): Promise<Guild | null> {
         return this.guildId ? this.client.guilds.fetch({ id: this.guildId, cache: true }) : null;
     }
