@@ -30,3 +30,4 @@ export * from "./Structures/Interactions/CommandOptionsResolver";
 export * from "./Structures/Interactions/MessageComponentInteraction";
 export * from "./Structures/Interactions/MessageContextMenuInteraction";
 export * from "./Structures/Interactions/UserContextMenuInteraction";
+export * from "./Structures/Interactions/ModalSubmitInteraction";
