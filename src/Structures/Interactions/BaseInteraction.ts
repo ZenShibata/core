@@ -1,4 +1,4 @@
-import { APIInteractionResponseCallbackData, APIMessage, ApplicationCommandType, GatewayInteractionCreateDispatchData, InteractionResponseType, InteractionType, MessageFlags, PermissionFlagsBits, Routes, Snowflake } from "discord-api-types/v10";
+import { APIInteractionResponseCallbackData, APIMessage, ApplicationCommandType, ComponentType, GatewayInteractionCreateDispatchData, InteractionResponseType, InteractionType, MessageFlags, PermissionFlagsBits, Routes, Snowflake } from "discord-api-types/v10";
 import { Base } from "../Base";
 import { CommandOptionsResolver } from "./CommandOptionsResolver";
 import { PermissionsBitField } from "../PermissionsBitField";
@@ -138,5 +138,13 @@ export class BaseInteraction extends Base<GatewayInteractionCreateDispatchData> 
 
     public isModalSubmit(): this is ModalSubmitInteraction {
         return this.data.type === InteractionType.ModalSubmit;
+    }
+
+    public isButton(): this is MessageComponentInteraction {
+        return this.isComponentInteraction() && this.componentType === ComponentType.Button;
+    }
+
+    public isSelectMenu(): this is MessageComponentInteraction {
+        return this.isComponentInteraction() && this.componentType === ComponentType.SelectMenu;
     }
 }
