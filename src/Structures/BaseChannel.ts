@@ -38,7 +38,7 @@ export class BaseChannel extends Base<APIChannel> {
     }
 
     public isSendable(): boolean {
-        return ![ChannelType.GuildCategory, ChannelType.GuildDirectory, ChannelType.GuildForum, ChannelType.GuildStageVoice].includes(this.type);
+        return ![ChannelType.GuildCategory, ChannelType.GuildDirectory, ChannelType.GuildForum].includes(this.type);
     }
 
     public get permissionOverwrites(): APIOverwrite[] {
