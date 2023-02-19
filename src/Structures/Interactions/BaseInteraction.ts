@@ -8,6 +8,7 @@ import { CommandInteraction } from "./CommandInteraction";
 import { BaseContextMenuInteraction } from "./BaseContextMenuInteraction";
 import { AutoCompleteInteraction } from "./AutoCompleteInteraction";
 import { MessageComponentInteraction } from "./MessageComponentInteraction";
+import { ModalSubmitInteraction } from "./ModalSubmitInteraction";
 
 export class BaseInteraction extends Base<GatewayInteractionCreateDispatchData> {
     public deferred = false;
@@ -106,6 +107,19 @@ export class BaseInteraction extends Base<GatewayInteractionCreateDispatchData> 
         return new Message(message as APIMessage, this.client);
     }
 
+    public async showModal(options: APIInteractionResponseCallbackData): Promise<this> {
+        if (this.deferred || this.replied) return Promise.reject(new Error("This interaction is already deferred or replied."));
+        await this.client.rest.post(Routes.interactionCallback(this.id, this.data.token), {
+            body: {
+                type: InteractionResponseType.Modal,
+                data: options
+            },
+            auth: false
+        });
+        this.replied = true;
+        return this;
+    }
+
     public isCommandInteraction(): this is CommandInteraction {
         return this.type === InteractionType.ApplicationCommand && this.commandType === ApplicationCommandType.ChatInput;
     }
@@ -120,5 +134,9 @@ export class BaseInteraction extends Base<GatewayInteractionCreateDispatchData> 
 
     public isComponentInteraction(): this is MessageComponentInteraction {
         return this.data.type === InteractionType.MessageComponent;
+    }
+
+    public isModalSubmit(): this is ModalSubmitInteraction {
+        return this.data.type === InteractionType.ModalSubmit;
     }
 }
