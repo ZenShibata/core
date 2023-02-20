@@ -7,8 +7,8 @@ import { GuildMember } from "./GuildMember";
 import { PermissionsBitField } from "./PermissionsBitField";
 
 export class BaseChannel extends Base<APIChannel> {
-    public get guildId(): string {
-        return this.guildId;
+    public get guildId(): string | undefined {
+        return "guild_id" in this.data ? this.data.guild_id : undefined;
     }
 
     public get name(): string {
@@ -46,6 +46,7 @@ export class BaseChannel extends Base<APIChannel> {
     }
 
     public async permissionsForMember(member: GuildMember): Promise<PermissionsBitField> {
+        if (!this.guildId) return new PermissionsBitField(PermissionFlagsBits, 0n);
         const guild = await this.client.guilds.fetch({ id: this.guildId });
 
         if (member.id === guild.ownerId) {

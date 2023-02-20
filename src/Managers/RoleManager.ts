@@ -30,7 +30,9 @@ export class RoleManager extends BaseManager<APIRole, Role> {
             const role = await this.cache.get(`${guildId}:${id}`);
             return role ?? null;
         }
-        keys ??= await this.client.redis.smembers(`${KeyConstants.ROLE_KEY}${KeyConstants.KEYS_SUFFIX}`);
+        keys ??= await this.client.redis.smembers(
+            MakeCacheNameFunction(KeyConstants.ROLE_KEY + KeyConstants.KEYS_SUFFIX, this.client.options.clientId!, this.client.options.gatewayRouting ?? false)
+        );
         const key = keys.find(key => key.includes(id));
         if (!key) return null;
         const role = await this.cache.get(key);

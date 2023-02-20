@@ -6,6 +6,7 @@ import { User } from "./User";
 import { Role } from "./Role";
 import { KeyConstants } from "../Utilities/Enums/KeyConstants";
 import { VoiceState } from "./VoiceState";
+import { MakeCacheNameFunction } from "../Utilities/Functions";
 
 export class GuildMember extends Base<APIGuildMember | GatewayGuildMemberRemoveDispatch["d"]> {
     public get id(): string {
@@ -29,7 +30,10 @@ export class GuildMember extends Base<APIGuildMember | GatewayGuildMemberRemoveD
     }
 
     public async resolveRoles(): Promise<Role[]> {
-        const keys = await this.client.redis.smembers(`${KeyConstants.ROLE_KEY}${KeyConstants.KEYS_SUFFIX}`);
+        const keys = await this.client.redis.smembers(
+            MakeCacheNameFunction(KeyConstants.ROLE_KEY + KeyConstants.KEYS_SUFFIX, this.client.options.clientId!, this.client.options.gatewayRouting ?? false)
+        );
+
         const roles = [];
 
         for (const id of this.roles) {

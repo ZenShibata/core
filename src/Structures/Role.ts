@@ -4,11 +4,11 @@ import { PermissionsBitField } from "./PermissionsBitField";
 
 export class Role extends Base<APIRole> {
     public get name(): string {
-        return this.name;
+        return this.data.name;
     }
 
     public get permissions(): PermissionsBitField {
-        return new PermissionsBitField(PermissionFlagsBits, this.data.permissions);
+        return new PermissionsBitField(PermissionFlagsBits, BigInt(this.data.permissions));
     }
 
     public get managed(): boolean {
