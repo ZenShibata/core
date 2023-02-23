@@ -3,6 +3,10 @@ import { Base } from "./Base";
 import { BaseImageURLOptions } from "@discordjs/rest";
 
 export class Guild extends Base<APIGuild | GatewayGuildCreateDispatchData> {
+    public get name(): string {
+        return this.data.name;
+    }
+
     public get available(): boolean {
         return Boolean("unavailable" in this.data ? this.data.unavailable : false);
     }
