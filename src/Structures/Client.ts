@@ -30,10 +30,11 @@ export class Client extends EventEmitter {
     public members: GuildMemberManager;
     public voiceStates: VoiceStateManager;
 
-    public amqp!: {
+    // @ts-expect-error We're going to set this later if user calls connect()
+    public amqp: {
         sender: RoutingPublisher<string, Record<string, any>>;
         receiver: RoutingSubscriber<string, Record<string, any>>;
-    };
+    } = { };
 
     public constructor(
         public options: ClientOptions
