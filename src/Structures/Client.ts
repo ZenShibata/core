@@ -75,7 +75,7 @@ export class Client extends EventEmitter {
             await this.amqp.receiver.init({ name: RabbitConstants.QUEUE_RECV, useExchangeBinding: true, exchangeType: "fanout", keys: "#", durable: true });
         }
 
-        await this.amqp.sender.init({ name: RabbitConstants.QUEUE_SEND, useExchangeBinding: true });
+        await this.amqp.sender.init({ queue: RabbitConstants.QUEUE_SEND, useExchangeBinding: true });
         this.rest.setToken(this.options.token!);
     }
 
