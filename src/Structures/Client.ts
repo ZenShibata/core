@@ -65,10 +65,8 @@ export class Client extends EventEmitter {
     public async connect(): Promise<void> {
         const { channel } = await createAmqp(process.env.AMQP_HOST ?? process.env.AMQP_URL ?? this.options.amqpUrl);
 
-        this.amqp = {
-            sender: new RoutingPublisher(channel),
-            receiver: new RoutingSubscriber(channel)
-        };
+        this.amqp.sender = new RoutingPublisher(channel);
+        this.amqp.receiver = new RoutingSubscriber(channel);
 
         if (this.options.gatewayRouting || process.env.USE_ROUTING === "true") {
             await this.amqp.receiver.init({ name: RabbitConstants.QUEUE_RECV, useExchangeBinding: true, exchangeType: "direct", keys: this.options.clientId!, durable: true });
