@@ -11,7 +11,7 @@ export class VoiceStateManager extends BaseManager<GatewayVoiceState, VoiceState
         client: Client
     ) {
         super(
-            KeyConstants.USER_KEY,
+            KeyConstants.VOICE_KEY,
             client
         );
     }
