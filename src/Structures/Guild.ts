@@ -107,6 +107,14 @@ export class Guild extends Base<APIGuild | GatewayGuildCreateDispatchData> {
         return this.data.features;
     }
 
+    public get icon(): string | null {
+        return this.data.icon;
+    }
+
+    public iconURL(options?: BaseImageURLOptions): string | null {
+        return this.icon && this.client.rest.cdn.icon(this.id, this.icon, options);
+    }
+
     public discoverySplashURL(options?: BaseImageURLOptions): string | null {
         return this.discoverySplash && this.client.rest.cdn.discoverySplash(this.id, this.discoverySplash, options);
     }
