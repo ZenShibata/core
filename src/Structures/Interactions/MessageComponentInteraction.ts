@@ -1,4 +1,4 @@
-import { ComponentType, InteractionResponseType, Routes } from "discord-api-types/v10";
+import { APIInteractionResponseCallbackData, APIMessage, ComponentType, InteractionResponseType, Routes } from "discord-api-types/v10";
 import { Message } from "../Message";
 import { BaseInteraction } from "./BaseInteraction";
 
@@ -27,5 +27,18 @@ export class MessageComponentInteraction extends BaseInteraction {
             auth: false
         });
         this.deferred = true;
+    }
+
+    public async update(options: APIInteractionResponseCallbackData): Promise<Message> {
+        if (this.deferred && this.replied) return Promise.reject(new Error("This interaction has already been deferred or replied."));
+        const message = await this.client.rest.patch(Routes.interactionCallback(this.applicationId, this.data.token), {
+            body: {
+                type: InteractionResponseType.UpdateMessage,
+                data: options
+            },
+            auth: false
+        });
+        this.replied = true;
+        return new Message(message as APIMessage, this.client);
     }
 }
