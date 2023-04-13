@@ -44,12 +44,13 @@ export class Client extends EventEmitter {
             this.redis = new Cluster(
                 options.redis.clusters,
                 {
+                    natMap: options.redis.natMap,
                     scaleReads: options.redis.scaleReads ?? "all",
                     redisOptions: options.redis.options
                 }
             );
         } else {
-            this.redis = new Redis(options.redis.options);
+            this.redis = new Redis({ natMap: options.redis.natMap, ...options.redis.options });
         }
 
         options.token ??= process.env.DISCORD_TOKEN;

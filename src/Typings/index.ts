@@ -1,4 +1,4 @@
-import { ClusterNode, NodeRole, RedisOptions } from "ioredis";
+import { ClusterNode, NatMap, NodeRole, RedisOptions } from "ioredis";
 import { CacheFactory } from "./Cache";
 
 export interface ClientOptions {
@@ -6,6 +6,7 @@ export interface ClientOptions {
     clientId?: string;
     amqpUrl: string;
     redis: {
+        natMap?: NatMap;
         options: RedisOptions;
         clusters?: ClusterNode[];
         scaleReads?: NodeRole;
