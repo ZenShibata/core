@@ -2,20 +2,16 @@
 import EventEmitter from "node:events";
 import { REST } from "@discordjs/rest";
 import { Cluster, Redis } from "ioredis";
-import { ClientOptions } from "../Typings";
-import { RabbitConstants } from "../Utilities/Enums/RabbitConstants";
-import { RoutingPublisher, RoutingSubscriber, createAmqp } from "@nezuchan/cordis-brokers";
-
-import { UserManager } from "../Managers/UserManager";
-import { GuildManager } from "../Managers/GuildManager";
-import { ChannelManager } from "../Managers/ChannelManager";
-import { Message } from "./Message";
+import { Message } from "./Message.js";
 import { APIMessage, RESTPostAPIChannelMessageJSONBody, Routes } from "discord-api-types/v10";
-import { RoleManager } from "../Managers/RoleManager";
-import { GuildMemberManager } from "../Managers/GuildMemberManager";
-import { VoiceStateManager } from "../Managers/VoiceStateManager";
+import { RoutingKey, createAmqpChannel, createRedis } from "@nezuchan/utilities";
+import { Channel } from "amqplib";
+import { ClientOptions } from "../Typings/index.js";
+import { RabbitMQ, RedisKey } from "@nezuchan/constants";
+import { Events } from "../Enums/Events.js";
 
 export class Client extends EventEmitter {
+    public clientId: string;
     public rest = new REST({
         api: process.env.PROXY ?? process.env.NIRN_PROXY ?? "https://discord.com/api",
         rejectOnRateLimit: (process.env.PROXY ?? process.env.NIRN_PROXY) !== undefined ? () => false : null
@@ -23,60 +19,45 @@ export class Client extends EventEmitter {
 
     public redis: Cluster | Redis;
 
-    public users: UserManager;
-    public guilds: GuildManager;
-    public channels: ChannelManager;
-    public roles: RoleManager;
-    public members: GuildMemberManager;
-    public voiceStates: VoiceStateManager;
-
-    // @ts-expect-error We're going to set this later if user calls connect()
-    public amqp: {
-        sender: RoutingPublisher<string, Record<string, any>>;
-        receiver: RoutingSubscriber<string, Record<string, any>>;
-    } = { };
+    public amqp!: Channel;
 
     public constructor(
         public options: ClientOptions
     ) {
         super();
-        if (options.redis.clusters?.length) {
-            this.redis = new Cluster(
-                options.redis.clusters,
-                {
-                    natMap: options.redis.natMap,
-                    scaleReads: options.redis.scaleReads ?? "all",
-                    redisOptions: options.redis.options
-                }
-            );
-        } else {
-            this.redis = new Redis({ natMap: options.redis.natMap, ...options.redis.options });
-        }
+        this.redis = createRedis(this.options.redis);
 
         options.token ??= process.env.DISCORD_TOKEN;
-        options.clientId ??= Buffer.from(options.token!.split(".")[0], "base64").toString();
-
-        this.members = new GuildMemberManager(this);
-        this.voiceStates = new VoiceStateManager(this);
-        this.channels = new ChannelManager(this);
-        this.guilds = new GuildManager(this);
-        this.users = new UserManager(this);
-        this.roles = new RoleManager(this);
+        this.clientId = options.clientId ?? Buffer.from(options.token!.split(".")[0], "base64").toString();
     }
 
     public async connect(): Promise<void> {
-        const { channel } = await createAmqp(process.env.AMQP_HOST ?? process.env.AMQP_URL ?? this.options.amqpUrl);
+        this.amqp = await createAmqpChannel(this.options.amqpUrl);
 
-        this.amqp.sender = new RoutingPublisher(channel);
-        this.amqp.receiver = new RoutingSubscriber(channel);
+        await this.amqp.assertExchange(RabbitMQ.GATEWAY_QUEUE_SEND, "direct", { durable: false });
+        const { queue } = await this.amqp.assertQueue("", { exclusive: true });
 
-        if (this.options.gatewayRouting || process.env.USE_ROUTING === "true") {
-            await this.amqp.receiver.init({ name: RabbitConstants.QUEUE_RECV, useExchangeBinding: true, exchangeType: "direct", keys: this.options.clientId!, durable: true });
+        if (Array.isArray(this.options.shardIds)) {
+            for (const shard of this.options.shardIds) {
+                await this.amqp.bindQueue(queue, RabbitMQ.GATEWAY_QUEUE_SEND, RoutingKey(this.clientId, shard));
+            }
+        } else if (this.options.shardIds.start >= 0 && this.options.shardIds.end >= 1) {
+            for (let i = this.options.shardIds.start; i < this.options.shardIds.end; i++) {
+                await this.amqp.bindQueue(queue, RabbitMQ.GATEWAY_QUEUE_SEND, RoutingKey(this.clientId, i));
+            }
         } else {
-            await this.amqp.receiver.init({ name: RabbitConstants.QUEUE_RECV, useExchangeBinding: true, exchangeType: "fanout", keys: "#", durable: true });
+            const shardCount = await this.redis.get(RedisKey.SHARDS_KEY);
+            if (shardCount) {
+                for (let i = 0; i < Number(shardCount); i++) {
+                    await this.amqp.bindQueue(queue, RabbitMQ.GATEWAY_QUEUE_SEND, RoutingKey(this.clientId, i));
+                }
+            }
         }
 
-        await this.amqp.sender.init({ queue: RabbitConstants.QUEUE_SEND, useExchangeBinding: true });
+        await this.amqp.consume(queue, message => {
+            if (message) this.emit(Events.RAW, JSON.parse(message.content.toString()));
+        });
+
         this.rest.setToken(this.options.token!);
     }
 

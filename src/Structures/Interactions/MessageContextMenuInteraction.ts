@@ -1,5 +1,5 @@
-import { Message } from "../Message";
-import { BaseContextMenuInteraction } from "./BaseContextMenuInteraction";
+import { Message } from "../Message.js";
+import { BaseContextMenuInteraction } from "./BaseContextMenuInteraction.js";
 
 export class MessageContextMenuInteraction extends BaseContextMenuInteraction {
     public getMessage(): Message | null {

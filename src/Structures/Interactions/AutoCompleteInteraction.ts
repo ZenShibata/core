@@ -1,5 +1,5 @@
 import { Routes, InteractionResponseType } from "discord-api-types/v10";
-import { BaseInteraction } from "./BaseInteraction";
+import { BaseInteraction } from "./BaseInteraction.js";
 
 export class AutoCompleteInteraction extends BaseInteraction {
     public responded = false;

@@ -1,16 +1,9 @@
-import { ClusterNode, NatMap, NodeRole, RedisOptions } from "ioredis";
-import { CacheFactory } from "./Cache";
+import { CreateRedisOptions } from "@nezuchan/utilities";
 
 export interface ClientOptions {
     token?: string;
     clientId?: string;
     amqpUrl: string;
-    redis: {
-        natMap?: NatMap;
-        options: RedisOptions;
-        clusters?: ClusterNode[];
-        scaleReads?: NodeRole;
-    };
-    gatewayRouting?: boolean;
-    makeCache?: CacheFactory;
+    redis: CreateRedisOptions;
+    shardIds: number[] | { start: number; end: number };
 }

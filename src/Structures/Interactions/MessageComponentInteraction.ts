@@ -1,6 +1,6 @@
 import { APIInteractionResponseCallbackData, APIMessage, ComponentType, InteractionResponseType, Routes } from "discord-api-types/v10";
-import { Message } from "../Message";
-import { BaseInteraction } from "./BaseInteraction";
+import { Message } from "../Message.js";
+import { BaseInteraction } from "./BaseInteraction.js";
 
 export class MessageComponentInteraction extends BaseInteraction {
     public getRawMessage(): Message | null {

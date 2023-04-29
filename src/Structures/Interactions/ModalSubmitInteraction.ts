@@ -1,6 +1,6 @@
 import { ModalSubmitActionRowComponent } from "discord-api-types/v10";
-import { BaseInteraction } from "./BaseInteraction";
-import { Message } from "../Message";
+import { BaseInteraction } from "./BaseInteraction.js";
+import { Message } from "../Message.js";
 
 export class ModalSubmitInteraction extends BaseInteraction {
     public get customId(): string | null {

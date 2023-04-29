@@ -1,4 +1,4 @@
-import { BaseInteraction } from "./BaseInteraction";
+import { BaseInteraction } from "./BaseInteraction.js";
 
 export class CommandInteraction extends BaseInteraction {
     public get commandName(): string | null {

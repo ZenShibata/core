@@ -1,5 +1,5 @@
 import { APIGuild, GatewayGuildCreateDispatchData, GuildDefaultMessageNotifications, GuildExplicitContentFilter, GuildFeature, GuildMFALevel, GuildPremiumTier } from "discord-api-types/v10";
-import { Base } from "./Base";
+import { Base } from "./Base.js";
 import { BaseImageURLOptions } from "@discordjs/rest";
 
 export class Guild extends Base<APIGuild | GatewayGuildCreateDispatchData> {

@@ -1,7 +1,7 @@
 import { APIGuildMember } from "discord-api-types/v10";
-import { GuildMember } from "../GuildMember";
-import { BaseContextMenuInteraction } from "./BaseContextMenuInteraction";
-import { User } from "../User";
+import { GuildMember } from "../GuildMember.js";
+import { BaseContextMenuInteraction } from "./BaseContextMenuInteraction.js";
+import { User } from "../User.js";
 
 export class UserContextMenuInteraction extends BaseContextMenuInteraction {
     public get getUser(): User | null {

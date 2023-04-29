@@ -1,5 +1,5 @@
 import { APIUser } from "discord-api-types/v10";
-import { Base } from "./Base";
+import { Base } from "./Base.js";
 import { DiscordSnowflake } from "@sapphire/snowflake";
 import { ImageURLOptions } from "@discordjs/rest";
 
