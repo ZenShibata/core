@@ -1,15 +1,15 @@
 import { APIChannel, APIGuild, APIOverwrite, APIRole, ChannelFlags, ChannelType, GatewayGuildCreateDispatchData, OverwriteType, PermissionFlagsBits, RESTPostAPIChannelMessageJSONBody, Routes } from "discord-api-types/v10";
-import { Base } from "./Base.js";
-import { Message } from "./Message.js";
+import { Base } from "../Base.js";
+import { Message } from "../Message.js";
 import { TextChannel } from "./TextChannel.js";
 import { VoiceChannel } from "./VoiceChannel.js";
-import { GuildMember } from "./GuildMember.js";
-import { PermissionsBitField } from "./PermissionsBitField.js";
-import { Guild } from "./Guild.js";
+import { GuildMember } from "../GuildMember.js";
+import { PermissionsBitField } from "../PermissionsBitField.js";
+import { Guild } from "../Guild.js";
 import { GenKey } from "@nezuchan/utilities";
 import { Result } from "@sapphire/result";
 import { RedisKey } from "@nezuchan/constants";
-import { Role } from "./Role.js";
+import { Role } from "../Role.js";
 
 export class BaseChannel extends Base<APIChannel> {
     public get guildId(): string | undefined {
