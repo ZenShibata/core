@@ -1,14 +1,25 @@
+/* eslint-disable max-len */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable no-negated-condition */
 import EventEmitter from "node:events";
 import { REST } from "@discordjs/rest";
 import { Cluster, Redis } from "ioredis";
 import { Message } from "./Message.js";
-import { APIMessage, RESTPostAPIChannelMessageJSONBody, Routes } from "discord-api-types/v10";
-import { RoutingKey, createAmqpChannel, createRedis } from "@nezuchan/utilities";
+import { APIChannel, APIGuild, APIGuildMember, APIMessage, APIUser, ChannelType, GatewayGuildMemberRemoveDispatchData, GatewayVoiceState, RESTPostAPIChannelMessageJSONBody, Routes } from "discord-api-types/v10";
+import { GenKey, RoutingKey, createAmqpChannel, createRedis } from "@nezuchan/utilities";
 import { Channel } from "amqplib";
 import { ClientOptions } from "../Typings/index.js";
 import { RabbitMQ, RedisKey } from "@nezuchan/constants";
 import { Events } from "../Enums/Events.js";
+import { GuildMember } from "./GuildMember.js";
+import { Result } from "@sapphire/result";
+import { User } from "./User.js";
+import { VoiceChannel } from "./Channels/VoiceChannel.js";
+import { TextChannel } from "./Channels/TextChannel.js";
+import { Guild } from "./Guild.js";
+import { BaseChannel } from "./Channels/BaseChannel.js";
+import { Role } from "./Role.js";
+import { VoiceState } from "./VoiceState.js";
 
 export class Client extends EventEmitter {
     public clientId: string;
@@ -59,6 +70,98 @@ export class Client extends EventEmitter {
         });
 
         this.rest.setToken(this.options.token!);
+    }
+
+    public async resolveMember({ force, cache, id, guildId }: { force?: boolean | undefined; cache?: boolean | undefined; id: string; guildId: string }): Promise<GuildMember | undefined> {
+        const cached_member = await this.redis.get(GenKey(this.clientId, RedisKey.MEMBER_KEY, id, guildId));
+        if (cached_member) {
+            return new GuildMember({ ...JSON.parse(cached_member), id, guild_id: guildId }, this);
+        }
+
+        if (force) {
+            const member = await Result.fromAsync(() => this.rest.get(Routes.guildMember(guildId, id)));
+            if (member.isOk()) {
+                if (cache) await this.redis.set(GenKey(this.clientId, RedisKey.MEMBER_KEY, id, guildId), JSON.stringify(member));
+                return new GuildMember({ ...member.unwrap() as APIGuildMember | GatewayGuildMemberRemoveDispatchData, id, guild_id: guildId }, this);
+            }
+        }
+    }
+
+    public async resolveUser({ force, cache, id }: { force?: boolean | undefined; cache?: boolean | undefined; id: string }): Promise<User | undefined> {
+        const cached_user = await this.redis.get(GenKey(this.clientId, RedisKey.USER_KEY, id));
+        if (cached_user) {
+            return new User({ ...JSON.parse(cached_user), id }, this);
+        }
+
+        if (force) {
+            const user = await Result.fromAsync(() => this.rest.get(Routes.user(id)));
+            if (user.isOk()) {
+                const user_value = user.unwrap() as APIUser;
+                if (cache) await this.redis.set(GenKey(this.clientId, RedisKey.USER_KEY, id), JSON.stringify(user));
+                return new User({ ...user_value, id }, this);
+            }
+        }
+    }
+
+    public async resolveGuild({ force, cache, id }: { force?: boolean | undefined; cache?: boolean | undefined; id: string }): Promise<Guild | undefined> {
+        const cached_guild = await this.redis.get(GenKey(this.clientId, RedisKey.GUILD_KEY, id));
+        if (cached_guild) {
+            return new Guild({ ...JSON.parse(cached_guild), id }, this);
+        }
+
+        if (force) {
+            const guild = await Result.fromAsync(() => this.rest.get(Routes.guild(id)));
+            if (guild.isOk()) {
+                const guild_value = guild.unwrap() as APIGuild;
+                if (cache) await this.redis.set(GenKey(this.clientId, RedisKey.GUILD_KEY, id), JSON.stringify(guild_value));
+                return new Guild({ ...guild_value, id }, this);
+            }
+        }
+    }
+
+    public async resolveRole({ id, guildId }: { id: string; guildId: string }): Promise<Role | undefined> {
+        const cached_role = await this.redis.get(GenKey(this.clientId, RedisKey.ROLE_KEY, id, guildId));
+        if (cached_role) {
+            return new Role({ ...JSON.parse(cached_role), id, guild_id: guildId }, this);
+        }
+    }
+
+    public async resolveVoiceState({ id, guildId }: { id: string; guildId: string }): Promise<VoiceState | undefined> {
+        const state = await this.redis.get(GenKey(RedisKey.VOICE_KEY, id, guildId));
+        if (state) {
+            return new VoiceState({ ...JSON.parse(state) as GatewayVoiceState, id }, this);
+        }
+    }
+
+    public async resolveChannel({ force, cache, id, guildId }: { force?: boolean | undefined; cache?: boolean | undefined; id: string; guildId: string }): Promise<BaseChannel | undefined> {
+        const cached_user = await this.redis.get(GenKey(this.clientId, RedisKey.CHANNEL_KEY, id, guildId));
+        if (cached_user) {
+            const channel_value = JSON.parse(cached_user) as APIChannel;
+            switch (channel_value.type) {
+                case ChannelType.GuildStageVoice:
+                case ChannelType.GuildVoice:
+                    return new VoiceChannel({ ...channel_value, id, guild_id: guildId }, this);
+                default: {
+                    return new TextChannel({ ...channel_value, id, guild_id: guildId }, this);
+                }
+            }
+        }
+
+        if (force) {
+            const channel = await Result.fromAsync(() => this.rest.get(Routes.channel(id)));
+            if (channel.isOk()) {
+                const channel_value = channel.unwrap() as APIChannel;
+                if (cache) await this.redis.set(GenKey(this.clientId, RedisKey.CHANNEL_KEY, id, guildId), JSON.stringify(channel_value));
+                switch (channel_value.type) {
+                    case ChannelType.GuildStageVoice:
+                    case ChannelType.GuildVoice:
+                        return new VoiceChannel({ ...channel_value, id, guild_id: guildId }, this);
+                    default: {
+                        return new TextChannel({ ...channel_value, id, guild_id: guildId }, this);
+                    }
+                }
+            }
+        }
     }
 
     public async sendMessage(options: RESTPostAPIChannelMessageJSONBody, channelId: string): Promise<Message> {

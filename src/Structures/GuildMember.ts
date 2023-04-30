@@ -1,13 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 /* eslint-disable no-nested-ternary */
-import { APIGuildMember, APIRole, APIUser, GatewayGuildMemberRemoveDispatch, GatewayVoiceState, Routes } from "discord-api-types/v10";
+import { APIGuildMember, GatewayGuildMemberRemoveDispatch } from "discord-api-types/v10";
 import { Base } from "./Base.js";
 import { User } from "./User.js";
 import { Role } from "./Role.js";
 import { VoiceState } from "./VoiceState.js";
-import { GenKey } from "@nezuchan/utilities";
-import { RedisKey } from "@nezuchan/constants";
-import { Result } from "@sapphire/result";
 
 export class GuildMember extends Base<APIGuildMember | GatewayGuildMemberRemoveDispatch["d"]> {
     public get id(): string {
@@ -38,52 +35,24 @@ export class GuildMember extends Base<APIGuildMember | GatewayGuildMemberRemoveD
         const roles = [];
         if (this.guildId) {
             for (const id of this.roles) {
-                const role = await this.client.redis.get(GenKey(RedisKey.ROLE_KEY, id, this.guildId));
-                if (role) {
-                    roles.push(
-                        new Role(
-                            JSON.parse(role) as APIRole,
-                            this.client
-                        )
-                    );
-                }
+                const role = await this.client.resolveRole({ id, guildId: this.guildId });
+                if (role) roles.push(role);
             }
         }
         return roles;
     }
 
-    public async resolveUser({ force = false, cache = true }: { force?: boolean; cache?: boolean }): Promise<User> {
+    public async resolveUser({ force = false, cache = true }: { force?: boolean; cache?: boolean }): Promise<User | undefined> {
         if (this.data.user) {
             return new User(this.data.user, this.client);
         }
 
-        const user = await this.client.redis.get(GenKey(RedisKey.USER_KEY, this.id));
-        if (user) {
-            return new User(JSON.parse(user) as APIUser, this.client);
-        }
-
-        if (force) {
-            const api_user = await Result.fromAsync(() => this.client.rest.get(Routes.user(this.id)));
-            if (api_user.isOk()) {
-                const user_value = api_user.unwrap() as APIUser;
-                if (cache) await this.client.redis.set(GenKey(RedisKey.USER_KEY, this.id), JSON.stringify(user_value));
-                return new User(user_value, this.client);
-            }
-
-            throw new Error(api_user.unwrapErr() as string);
-        }
-
-        throw new Error("User not found");
+        return this.client.resolveUser({ id: this.id, force, cache });
     }
 
-    public async resolveVoiceState(): Promise<VoiceState | null> {
+    public async resolveVoiceState(): Promise<VoiceState | undefined> {
         if (this.guildId) {
-            const state = await this.client.redis.get(GenKey(RedisKey.VOICE_KEY, this.id, this.guildId));
-            if (state) {
-                return new VoiceState({ ...JSON.parse(state) as GatewayVoiceState, id: this.id }, this.client);
-            }
+            return this.client.resolveVoiceState({ id: this.id, guildId: this.guildId });
         }
-
-        return null;
     }
 }

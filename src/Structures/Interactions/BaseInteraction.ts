@@ -1,5 +1,5 @@
 /* eslint-disable max-len */
-import { APIGuildMember, APIInteractionResponseCallbackData, APIMessage, ApplicationCommandType, ComponentType, GatewayGuildMemberRemoveDispatchData, GatewayInteractionCreateDispatchData, InteractionResponseType, InteractionType, MessageFlags, PermissionFlagsBits, Routes, Snowflake } from "discord-api-types/v10";
+import { APIInteractionResponseCallbackData, APIMessage, ApplicationCommandType, ComponentType, GatewayInteractionCreateDispatchData, InteractionResponseType, InteractionType, MessageFlags, PermissionFlagsBits, Routes, Snowflake } from "discord-api-types/v10";
 import { Base } from "../Base.js";
 import { CommandOptionsResolver } from "./CommandOptionsResolver.js";
 import { PermissionsBitField } from "../PermissionsBitField.js";
@@ -10,9 +10,6 @@ import { BaseContextMenuInteraction } from "./BaseContextMenuInteraction.js";
 import { AutoCompleteInteraction } from "./AutoCompleteInteraction.js";
 import { MessageComponentInteraction } from "./MessageComponentInteraction.js";
 import { ModalSubmitInteraction } from "./ModalSubmitInteraction.js";
-import { GenKey } from "@nezuchan/utilities";
-import { RedisKey } from "@nezuchan/constants";
-import { Result } from "@sapphire/result";
 
 export class BaseInteraction extends Base<GatewayInteractionCreateDispatchData> {
     public deferred = false;
@@ -54,23 +51,10 @@ export class BaseInteraction extends Base<GatewayInteractionCreateDispatchData> 
         return this.data.member ? new GuildMember({ id: this.data.member.user.id, ...this.data.member }, this.client) : null;
     }
 
-    public async resolveClientMember({ force = false, cache = true }: { force?: boolean; cache?: boolean }): Promise<GuildMember | null> {
+    public async resolveClientMember({ force = false, cache = true }: { force?: boolean; cache?: boolean }): Promise<GuildMember | undefined> {
         if (this.guildId) {
-            const cached_member = await this.client.redis.get(GenKey(this.client.clientId, RedisKey.MEMBER_KEY, this.applicationId, this.guildId));
-            if (cached_member) {
-                return new GuildMember({ ...JSON.parse(cached_member) as APIGuildMember | GatewayGuildMemberRemoveDispatchData, id: this.applicationId, guild_id: this.guildId }, this.client);
-            }
-
-            if (force) {
-                const member = await Result.fromAsync(() => this.client.rest.get(Routes.guildMember(this.guildId, this.applicationId)));
-                if (member.isOk()) {
-                    if (cache) await this.client.redis.set(GenKey(this.client.clientId, RedisKey.MEMBER_KEY, this.applicationId, this.guildId), JSON.stringify(member));
-                    return new GuildMember({ ...member.unwrap() as APIGuildMember | GatewayGuildMemberRemoveDispatchData, id: this.applicationId, guild_id: this.guildId }, this.client);
-                }
-            }
+            return this.client.resolveMember({ id: this.client.clientId, guildId: this.guildId, force, cache });
         }
-
-        return null;
     }
 
     public async reply(options: APIInteractionResponseCallbackData): Promise<this> {
