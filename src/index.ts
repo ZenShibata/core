@@ -20,3 +20,4 @@ export * from "./Structures/Interactions/MessageComponentInteraction.js";
 export * from "./Structures/Interactions/MessageContextMenuInteraction.js";
 export * from "./Structures/Interactions/UserContextMenuInteraction.js";
 export * from "./Structures/Interactions/ModalSubmitInteraction.js";
+export * from "./Enums/Events.js";
