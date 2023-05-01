@@ -48,22 +48,7 @@ export class Client extends EventEmitter {
         await this.amqp.assertExchange(RabbitMQ.GATEWAY_QUEUE_SEND, "direct", { durable: false });
         const { queue } = await this.amqp.assertQueue("", { exclusive: true });
 
-        if (Array.isArray(this.options.shardIds)) {
-            for (const shard of this.options.shardIds) {
-                await this.amqp.bindQueue(queue, RabbitMQ.GATEWAY_QUEUE_SEND, RoutingKey(this.clientId, shard));
-            }
-        } else if (this.options.shardIds && this.options.shardIds.start >= 0 && this.options.shardIds.end >= 1) {
-            for (let i = this.options.shardIds.start; i < this.options.shardIds.end; i++) {
-                await this.amqp.bindQueue(queue, RabbitMQ.GATEWAY_QUEUE_SEND, RoutingKey(this.clientId, i));
-            }
-        } else {
-            const shardCount = await this.redis.get(GenKey(this.clientId, RedisKey.SHARDS_KEY));
-            if (shardCount) {
-                for (let i = 0; i < Number(shardCount); i++) {
-                    await this.amqp.bindQueue(queue, RabbitMQ.GATEWAY_QUEUE_SEND, RoutingKey(this.clientId, i));
-                }
-            }
-        }
+        await this.bindQueue(queue, RabbitMQ.GATEWAY_QUEUE_SEND);
 
         await this.amqp.consume(queue, message => {
             if (message) this.emit(Events.RAW, JSON.parse(message.content.toString()));
@@ -168,6 +153,25 @@ export class Client extends EventEmitter {
         return this.rest.post(Routes.channelMessages(channelId), {
             body: options
         }).then(x => new Message(x as APIMessage, this));
+    }
+
+    public async bindQueue(queue: string, exchange: string): Promise<void> {
+        if (Array.isArray(this.options.shardIds)) {
+            for (const shard of this.options.shardIds) {
+                await this.amqp.bindQueue(queue, exchange, RoutingKey(this.clientId, shard));
+            }
+        } else if (this.options.shardIds && this.options.shardIds.start >= 0 && this.options.shardIds.end >= 1) {
+            for (let i = this.options.shardIds.start; i < this.options.shardIds.end; i++) {
+                await this.amqp.bindQueue(queue, exchange, RoutingKey(this.clientId, i));
+            }
+        } else {
+            const shardCount = await this.redis.get(GenKey(this.clientId, RedisKey.SHARDS_KEY));
+            if (shardCount) {
+                for (let i = 0; i < Number(shardCount); i++) {
+                    await this.amqp.bindQueue(queue, exchange, RoutingKey(this.clientId, i));
+                }
+            }
+        }
     }
 
     public async fetchShardCount(): Promise<number> {
