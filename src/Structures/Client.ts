@@ -112,7 +112,7 @@ export class Client extends EventEmitter {
     }
 
     public async resolveVoiceState({ id, guildId }: { id: string; guildId: string }): Promise<VoiceState | undefined> {
-        const state = await this.redis.get(GenKey(RedisKey.VOICE_KEY, id, guildId));
+        const state = await this.redis.get(GenKey(this.clientId, RedisKey.VOICE_KEY, id, guildId));
         if (state) {
             return new VoiceState({ ...JSON.parse(state) as GatewayVoiceState, id }, this);
         }
