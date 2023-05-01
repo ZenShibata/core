@@ -57,7 +57,7 @@ export class Client extends EventEmitter {
                 await this.amqp.bindQueue(queue, RabbitMQ.GATEWAY_QUEUE_SEND, RoutingKey(this.clientId, i));
             }
         } else {
-            const shardCount = await this.redis.get(RedisKey.SHARDS_KEY);
+            const shardCount = await this.redis.get(GenKey(this.clientId, RedisKey.SHARDS_KEY));
             if (shardCount) {
                 for (let i = 0; i < Number(shardCount); i++) {
                     await this.amqp.bindQueue(queue, RabbitMQ.GATEWAY_QUEUE_SEND, RoutingKey(this.clientId, i));
@@ -168,5 +168,17 @@ export class Client extends EventEmitter {
         return this.rest.post(Routes.channelMessages(channelId), {
             body: options
         }).then(x => new Message(x as APIMessage, this));
+    }
+
+    public async fetchShardCount(): Promise<number> {
+        const shardCount = await this.redis.get(GenKey(this.clientId, RedisKey.SHARDS_KEY));
+        return shardCount ? Number(shardCount) : 1;
+    }
+
+    public async publishExchange(guildId: string, exchange: string, data: unknown): Promise<boolean> {
+        const shardCount = await this.fetchShardCount();
+        const currentShardId = Number(BigInt(guildId) >> 22n) % shardCount;
+
+        return this.amqp.publish(exchange, RoutingKey(this.clientId, currentShardId), Buffer.from(JSON.stringify(data)));
     }
 }
