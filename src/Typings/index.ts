@@ -5,5 +5,5 @@ export interface ClientOptions {
     clientId?: string;
     amqpUrl: string;
     redis: CreateRedisOptions;
-    shardIds: number[] | { start: number; end: number };
+    shardIds?: number[] | { start: number; end: number };
 }
