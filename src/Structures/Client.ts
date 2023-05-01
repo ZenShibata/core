@@ -52,7 +52,7 @@ export class Client extends EventEmitter {
             for (const shard of this.options.shardIds) {
                 await this.amqp.bindQueue(queue, RabbitMQ.GATEWAY_QUEUE_SEND, RoutingKey(this.clientId, shard));
             }
-        } else if (this.options.shardIds.start >= 0 && this.options.shardIds.end >= 1) {
+        } else if (this.options.shardIds && this.options.shardIds.start >= 0 && this.options.shardIds.end >= 1) {
             for (let i = this.options.shardIds.start; i < this.options.shardIds.end; i++) {
                 await this.amqp.bindQueue(queue, RabbitMQ.GATEWAY_QUEUE_SEND, RoutingKey(this.clientId, i));
             }
