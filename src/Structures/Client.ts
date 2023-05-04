@@ -55,7 +55,7 @@ export class Client extends EventEmitter {
         await channel.assertExchange(RabbitMQ.GATEWAY_QUEUE_SEND, "direct", { durable: false });
         const { queue } = await channel.assertQueue("", { exclusive: true });
 
-        await this.bindQueue(queue, RabbitMQ.GATEWAY_QUEUE_SEND);
+        await this.bindQueue(channel, queue, RabbitMQ.GATEWAY_QUEUE_SEND);
 
         await channel.consume(queue, message => {
             if (message) this.emit(Events.RAW, JSON.parse(message.content.toString()));
@@ -160,20 +160,20 @@ export class Client extends EventEmitter {
         }).then(x => new Message(x as APIMessage, this));
     }
 
-    public async bindQueue(queue: string, exchange: string): Promise<void> {
+    public async bindQueue(channel: Channel, queue: string, exchange: string): Promise<void> {
         if (Array.isArray(this.options.shardIds)) {
             for (const shard of this.options.shardIds) {
-                await this.amqp.bindQueue(queue, exchange, RoutingKey(this.clientId, shard));
+                await channel.bindQueue(queue, exchange, RoutingKey(this.clientId, shard));
             }
         } else if (this.options.shardIds && this.options.shardIds.start >= 0 && this.options.shardIds.end >= 1) {
             for (let i = this.options.shardIds.start; i < this.options.shardIds.end; i++) {
-                await this.amqp.bindQueue(queue, exchange, RoutingKey(this.clientId, i));
+                await channel.bindQueue(queue, exchange, RoutingKey(this.clientId, i));
             }
         } else {
             const shardCount = await this.redis.get(GenKey(this.clientId, RedisKey.SHARDS_KEY));
             if (shardCount) {
                 for (let i = 0; i < Number(shardCount); i++) {
-                    await this.amqp.bindQueue(queue, exchange, RoutingKey(this.clientId, i));
+                    await channel.bindQueue(queue, exchange, RoutingKey(this.clientId, i));
                 }
             }
         }
