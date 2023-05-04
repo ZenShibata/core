@@ -7,7 +7,7 @@ import { Cluster, Redis } from "ioredis";
 import { Message } from "./Message.js";
 import { APIChannel, APIGuild, APIGuildMember, APIMessage, APIUser, ChannelType, GatewayGuildMemberRemoveDispatchData, GatewayVoiceState, RESTPostAPIChannelMessageJSONBody, Routes } from "discord-api-types/v10";
 import { GenKey, RoutingKey, createAmqpChannel, createRedis } from "@nezuchan/utilities";
-import { Channel } from "amqplib";
+import { ChannelWrapper } from "amqp-connection-manager";
 import { ClientOptions } from "../Typings/index.js";
 import { RabbitMQ, RedisKey } from "@nezuchan/constants";
 import { Events } from "../Enums/Events.js";
@@ -20,6 +20,7 @@ import { Guild } from "./Guild.js";
 import { BaseChannel } from "./Channels/BaseChannel.js";
 import { Role } from "./Role.js";
 import { VoiceState } from "./VoiceState.js";
+import { Channel } from "amqplib";
 
 export class Client extends EventEmitter {
     public clientId: string;
@@ -30,7 +31,7 @@ export class Client extends EventEmitter {
 
     public redis: Cluster | Redis;
 
-    public amqp!: Channel;
+    public amqp!: ChannelWrapper;
 
     public constructor(
         public options: ClientOptions
@@ -42,19 +43,23 @@ export class Client extends EventEmitter {
         this.clientId = options.clientId ?? Buffer.from(options.token!.split(".")[0], "base64").toString();
     }
 
-    public async connect(): Promise<void> {
-        this.amqp = await createAmqpChannel(this.options.amqpUrl);
-
-        await this.amqp.assertExchange(RabbitMQ.GATEWAY_QUEUE_SEND, "direct", { durable: false });
-        const { queue } = await this.amqp.assertQueue("", { exclusive: true });
-
-        await this.bindQueue(queue, RabbitMQ.GATEWAY_QUEUE_SEND);
-
-        await this.amqp.consume(queue, message => {
-            if (message) this.emit(Events.RAW, JSON.parse(message.content.toString()));
+    public connect(): void {
+        this.amqp = createAmqpChannel(this.options.amqpUrl, {
+            setup: async (channel: Channel) => this.setupAmqp(channel)
         });
 
         this.rest.setToken(this.options.token!);
+    }
+
+    public async setupAmqp(channel: Channel): Promise<void> {
+        await channel.assertExchange(RabbitMQ.GATEWAY_QUEUE_SEND, "direct", { durable: false });
+        const { queue } = await channel.assertQueue("", { exclusive: true });
+
+        await this.bindQueue(queue, RabbitMQ.GATEWAY_QUEUE_SEND);
+
+        await channel.consume(queue, message => {
+            if (message) this.emit(Events.RAW, JSON.parse(message.content.toString()));
+        });
     }
 
     public async resolveMember({ force, cache, id, guildId }: { force?: boolean | undefined; cache?: boolean | undefined; id: string; guildId: string }): Promise<GuildMember | undefined> {
