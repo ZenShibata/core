@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable max-len */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable no-negated-condition */
@@ -8,7 +9,7 @@ import { Message } from "./Message.js";
 import { APIChannel, APIGuild, APIGuildMember, APIMessage, APIUser, ChannelType, GatewayGuildMemberRemoveDispatchData, GatewayVoiceState, RESTPostAPIChannelMessageJSONBody, Routes } from "discord-api-types/v10";
 import { GenKey, RoutingKey, createAmqpChannel, createRedis } from "@nezuchan/utilities";
 import { ChannelWrapper } from "amqp-connection-manager";
-import { ClientOptions } from "../Typings/index.js";
+import { ClientOptions, WaitReplyOptions } from "../Typings/index.js";
 import { RabbitMQ, RedisKey } from "@nezuchan/constants";
 import { Events } from "../Enums/Events.js";
 import { GuildMember } from "./GuildMember.js";
@@ -184,10 +185,21 @@ export class Client extends EventEmitter {
         return shardCount ? Number(shardCount) : 1;
     }
 
-    public async publishExchange(guildId: string, exchange: string, data: unknown): Promise<boolean> {
+    public async publishExchange<T>(guildId: string, exchange: string, data: unknown, waitReply?: WaitReplyOptions): Promise<T> {
         const shardCount = await this.fetchShardCount();
         const currentShardId = Number(BigInt(guildId) >> 22n) % shardCount;
 
-        return this.amqp.publish(exchange, RoutingKey(this.clientId, currentShardId), Buffer.from(JSON.stringify(data)));
+        const success = await this.amqp.publish(exchange, RoutingKey(this.clientId, currentShardId), Buffer.from(JSON.stringify(data)));
+
+        if (waitReply) {
+            const timeout = setTimeout(() => new Error("No server replied."), waitReply.timeout);
+            const result = await waitReply.setupWaiter();
+            if (result) {
+                clearTimeout(timeout);
+                return result as T;
+            }
+        }
+
+        return { success } as unknown as T;
     }
 }
