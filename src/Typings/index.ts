@@ -7,8 +7,3 @@ export interface ClientOptions {
     redis: CreateRedisOptions;
     shardIds?: number[] | { start: number; end: number };
 }
-
-export interface WaitReplyOptions {
-    timeout: number;
-    setupWaiter: () => Promise<unknown>;
-}

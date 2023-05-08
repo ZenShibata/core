@@ -9,7 +9,7 @@ import { Message } from "./Message.js";
 import { APIChannel, APIGuild, APIGuildMember, APIMessage, APIUser, ChannelType, GatewayGuildMemberRemoveDispatchData, GatewayVoiceState, RESTPostAPIChannelMessageJSONBody, Routes } from "discord-api-types/v10";
 import { GenKey, RoutingKey, createAmqpChannel, createRedis } from "@nezuchan/utilities";
 import { ChannelWrapper } from "amqp-connection-manager";
-import { ClientOptions, WaitReplyOptions } from "../Typings/index.js";
+import { ClientOptions } from "../Typings/index.js";
 import { RabbitMQ, RedisKey } from "@nezuchan/constants";
 import { Events } from "../Enums/Events.js";
 import { GuildMember } from "./GuildMember.js";
@@ -185,21 +185,16 @@ export class Client extends EventEmitter {
         return shardCount ? Number(shardCount) : 1;
     }
 
-    public async publishExchange<T>(guildId: string, exchange: string, data: unknown, waitReply?: WaitReplyOptions): Promise<T> {
+    public async publishExchange<T>(guildId: string, exchange: string, data: unknown, waitReply?: () => Promise<unknown>): Promise<Result<T, unknown>> {
         const shardCount = await this.fetchShardCount();
         const currentShardId = Number(BigInt(guildId) >> 22n) % shardCount;
 
         const success = await this.amqp.publish(exchange, RoutingKey(this.clientId, currentShardId), Buffer.from(JSON.stringify(data)));
 
         if (waitReply) {
-            const timeout = setTimeout(() => new Error("No server replied."), waitReply.timeout);
-            const result = await waitReply.setupWaiter();
-            if (result) {
-                clearTimeout(timeout);
-                return result as T;
-            }
+            return Result.fromAsync<T>(() => waitReply() as T);
         }
 
-        return { success } as unknown as T;
+        return success ? Result.ok<T>({ success } as T) : Result.err(new Error("Failed to publish message"));
     }
 }
