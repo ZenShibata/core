@@ -56,9 +56,6 @@ export class BaseChannel extends Base<APIChannel> {
         }
 
         const roles = await member.resolveRoles();
-        const everyoneRole = await this.client.resolveRole({ id: guild.id, guildId: guild.id });
-        if (everyoneRole) roles.push(everyoneRole);
-
         const permissions = new PermissionsBitField(PermissionFlagsBits, roles.reduce((a, b) => a | b.permissions.bits, 0n));
 
         if (permissions.bits & PermissionFlagsBits.Administrator) {

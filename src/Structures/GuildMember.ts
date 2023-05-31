@@ -38,6 +38,8 @@ export class GuildMember extends Base<APIGuildMember | GatewayGuildMemberRemoveD
                 const role = await this.client.resolveRole({ id, guildId: this.guildId });
                 if (role) roles.push(role);
             }
+            const everyoneRole = await this.client.resolveRole({ id: this.guildId, guildId: this.guildId });
+            if (everyoneRole) roles.push(everyoneRole);
         }
         return roles;
     }
