@@ -95,7 +95,7 @@ export class BaseChannel extends Base<APIChannel> {
 
     public async resolveGuild(): Promise<Guild | undefined> {
         if (this.guildId) {
-            return this.client.resolveGuild({ id: this.guildId });
+            return this.client.resolveGuild({ id: this.guildId, force: true, cache: true });
         }
     }
 }
