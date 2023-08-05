@@ -29,6 +29,17 @@ export class CommandOptionsResolver {
         }
     }
 
+    public get<T>(name: string, required?: boolean): T | null;
+    public get<T>(name: string, required: true): T;
+    public get<T>(name: string, required = false): T {
+        const option = this.options.find(option => option.name === name);
+        if (option) {
+            if ("value" in option) return cast<T>(option.value);
+        }
+        if (required) throw new Error(`${name} is required, but it was missing.`);
+        return cast<T>(null);
+    }
+
     public getString(name: string, required?: boolean): string | null;
     public getString(name: string, required: true): string;
     public getString(name: string, required = false): string {
@@ -44,6 +55,17 @@ export class CommandOptionsResolver {
     public getNumber(name: string, required: true): number;
     public getNumber(name: string, required = false): number {
         const option = this.options.find(option => option.name === name && option.type === ApplicationCommandOptionType.Number);
+        if (option) {
+            if ("value" in option) return cast<number>(option.value);
+        }
+        if (required) throw new Error(`${name} is required, but it was missing.`);
+        return cast<number>(null);
+    }
+
+    public getInteger(name: string, required?: boolean): number | null;
+    public getInteger(name: string, required: true): number;
+    public getInteger(name: string, required = false): number {
+        const option = this.options.find(option => option.name === name && option.type === ApplicationCommandOptionType.Integer);
         if (option) {
             if ("value" in option) return cast<number>(option.value);
         }
