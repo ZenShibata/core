@@ -55,7 +55,7 @@
   },
   "dependencies": {
     "@cordis/bitfield": "^1.2.0",
-    "@discordjs/rest": "^1.7.1",
+    "@discordjs/rest": "^2.0.0",
     "@nezuchan/constants": "^0.5.6",
     "@nezuchan/decorators": "^0.1.0",
     "@nezuchan/utilities": "^0.5.1",
