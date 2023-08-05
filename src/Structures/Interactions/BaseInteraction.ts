@@ -1,5 +1,5 @@
 /* eslint-disable max-len */
-import { APIInteractionResponseCallbackData, APIMessage, ApplicationCommandType, ComponentType, GatewayInteractionCreateDispatchData, InteractionResponseType, InteractionType, MessageFlags, PermissionFlagsBits, Routes, Snowflake } from "discord-api-types/v10";
+import { APIChannel, APIInteractionResponseCallbackData, APIMessage, ApplicationCommandType, ComponentType, GatewayInteractionCreateDispatchData, InteractionResponseType, InteractionType, MessageFlags, PermissionFlagsBits, Routes, Snowflake } from "discord-api-types/v10";
 import { Base } from "../Base.js";
 import { CommandOptionsResolver } from "./CommandOptionsResolver.js";
 import { PermissionsBitField } from "../PermissionsBitField.js";
@@ -10,6 +10,7 @@ import { BaseContextMenuInteraction } from "./BaseContextMenuInteraction.js";
 import { AutoCompleteInteraction } from "./AutoCompleteInteraction.js";
 import { MessageComponentInteraction } from "./MessageComponentInteraction.js";
 import { ModalSubmitInteraction } from "./ModalSubmitInteraction.js";
+import { Guild } from "../Guild.js";
 
 export class BaseInteraction extends Base<GatewayInteractionCreateDispatchData> {
     public deferred = false;
@@ -32,11 +33,15 @@ export class BaseInteraction extends Base<GatewayInteractionCreateDispatchData> 
     }
 
     public get channelId(): Snowflake | null {
-        return this.data.channel_id ?? null;
+        return this.data.channel?.id ?? null;
     }
 
-    public get guildId(): Snowflake {
-        return this.data.guild_id!;
+    public get guildId(): Snowflake | undefined {
+        return this.data.guild_id;
+    }
+
+    public get channel(): Partial<APIChannel> & Pick<APIChannel, "id" | "type"> | undefined {
+        return this.data.channel;
     }
 
     public get applicationPermissions(): PermissionsBitField | null {
@@ -51,9 +56,15 @@ export class BaseInteraction extends Base<GatewayInteractionCreateDispatchData> 
         return this.data.member ? new GuildMember({ id: this.data.member.user.id, ...this.data.member }, this.client) : null;
     }
 
-    public async resolveClientMember({ force = false, cache = true }: { force?: boolean; cache?: boolean }): Promise<GuildMember | undefined> {
+    public async resolveClientMember({ force, cache }: { force?: boolean; cache: boolean } = { force: false, cache: true }): Promise<GuildMember | undefined> {
         if (this.guildId) {
             return this.client.resolveMember({ id: this.client.clientId, guildId: this.guildId, force, cache });
+        }
+    }
+
+    public async resolveGuild({ force, cache }: { force?: boolean; cache: boolean } = { force: false, cache: true }): Promise<Guild | undefined> {
+        if (this.guildId) {
+            return this.client.resolveGuild({ id: this.guildId, force, cache });
         }
     }
 
