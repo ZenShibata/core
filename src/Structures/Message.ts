@@ -1,5 +1,5 @@
 /* eslint-disable max-len */
-import { APIMessage, GatewayMessageCreateDispatchData, GatewayMessageDeleteDispatch, GatewayMessageUpdateDispatch, RESTPatchAPIChannelMessageJSONBody, Routes } from "discord-api-types/v10";
+import { APIAttachment, APIEmbed, APIMessage, APIMessageComponent, APIMessageReference, APIReaction, APIStickerItem, GatewayMessageCreateDispatchData, GatewayMessageDeleteDispatch, GatewayMessageUpdateDispatch, RESTPatchAPIChannelMessageJSONBody, Routes } from "discord-api-types/v10";
 import { Base } from "./Base.js";
 import { Guild } from "./Guild.js";
 import { User } from "./User.js";
@@ -20,6 +20,30 @@ export class Message extends Base<APIMessage | GatewayMessageCreateDispatchData 
 
     public get webhookId(): string | undefined {
         return "webhook_id" in this.data ? this.data.webhook_id : undefined;
+    }
+
+    public get attachments(): APIAttachment[] {
+        return "attachments" in this.data ? this.data.attachments : [];
+    }
+
+    public get embeds(): APIEmbed[] {
+        return "embeds" in this.data ? this.data.embeds : [];
+    }
+
+    public get reactions(): APIReaction[] {
+        return "reactions" in this.data ? this.data.reactions ?? [] : [];
+    }
+
+    public get stickerItems(): APIStickerItem[] {
+        return "sticker_items" in this.data ? this.data.sticker_items ?? [] : [];
+    }
+
+    public get messageReference(): APIMessageReference | undefined {
+        return "message_reference" in this.data ? this.data.message_reference : undefined;
+    }
+
+    public get components(): APIMessageComponent[] {
+        return "components" in this.data ? this.data.components ?? [] : [];
     }
 
     public async resolveGuild({ force = false, cache = true }: { force?: boolean; cache?: boolean }): Promise<Guild | undefined> {
