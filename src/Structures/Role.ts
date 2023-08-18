@@ -18,4 +18,8 @@ export class Role extends Base<APIRole> {
     public get mentionable(): boolean {
         return this.data.mentionable;
     }
+
+    public get position(): number {
+        return this.data.position;
+    }
 }

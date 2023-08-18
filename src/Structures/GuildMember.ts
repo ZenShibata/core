@@ -44,6 +44,22 @@ export class GuildMember extends Base<APIGuildMember | GatewayGuildMemberRemoveD
         return "avatar" in this.data && this.data.avatar ? this.client.rest.cdn.icon(this.id, this.data.avatar, options) : null;
     }
 
+    public async manageable(): Promise<boolean> {
+        const guild = await this.client.resolveGuild({ id: this.guildId! });
+        if (this.id === guild?.ownerId) return false;
+        if (this.id === this.client.clientId) return false;
+        if (this.client.clientId === guild?.ownerId) return true;
+
+        const clientMember = await this.client.resolveMember({ id: this.client.clientId, guildId: this.guildId!, force: true });
+        if (!clientMember) return false;
+
+        const clientRoles = await clientMember.resolveRoles();
+        const memberRoles = await this.resolveRoles();
+
+        if (clientRoles[0].position > memberRoles[0].position) return true;
+        return false;
+    }
+
     public async resolveRoles(): Promise<Role[]> {
         const roles = [];
         if (this.guildId) {
