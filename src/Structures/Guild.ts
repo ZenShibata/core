@@ -1,10 +1,16 @@
 import { APIGuild, GatewayGuildCreateDispatchData, GuildDefaultMessageNotifications, GuildExplicitContentFilter, GuildFeature, GuildMFALevel, GuildPremiumTier } from "discord-api-types/v10";
 import { Base } from "./Base.js";
 import { BaseImageURLOptions } from "@discordjs/rest";
+import { NezuSnowflake } from "@nezuchan/utilities";
+import { cast } from "@sapphire/utilities";
 
 export class Guild extends Base<APIGuild | GatewayGuildCreateDispatchData> {
     public get name(): string {
         return this.data.name;
+    }
+
+    public get description(): string | null {
+        return this.data.description;
     }
 
     public get available(): boolean {
@@ -63,6 +69,14 @@ export class Guild extends Base<APIGuild | GatewayGuildCreateDispatchData> {
         return this.data.mfa_level;
     }
 
+    public get createdTimestamp(): number {
+        return cast<number>(NezuSnowflake.deconstruct(this.id).timestamp);
+    }
+
+    public get createdAt(): Date {
+        return new Date(this.createdTimestamp);
+    }
+
     public get joinedTimestamp(): number {
         return "joined_at" in this.data ? Date.parse(this.data.joined_at) : 0;
     }
@@ -109,6 +123,14 @@ export class Guild extends Base<APIGuild | GatewayGuildCreateDispatchData> {
 
     public get icon(): string | null {
         return this.data.icon;
+    }
+
+    public get banner(): string | null {
+        return this.data.banner;
+    }
+
+    public bannerURL(options?: BaseImageURLOptions): string | null {
+        return this.banner && this.client.rest.cdn.banner(this.id, this.banner, options);
     }
 
     public iconURL(options?: BaseImageURLOptions): string | null {
