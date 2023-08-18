@@ -7,9 +7,9 @@ import { Role } from "./Role.js";
 import { VoiceState } from "./VoiceState.js";
 import { BaseImageURLOptions } from "@discordjs/rest";
 
-export class GuildMember extends Base<APIGuildMember & GatewayGuildMemberRemoveDispatch["d"]> {
+export class GuildMember extends Base<APIGuildMember | GatewayGuildMemberRemoveDispatch["d"]> {
     public get id(): string {
-        return this.data.id ?? this.data.user.id;
+        return this.data.id ?? this.data.user!.id;
     }
 
     public get guildId(): string | undefined {
@@ -25,23 +25,23 @@ export class GuildMember extends Base<APIGuildMember & GatewayGuildMemberRemoveD
     }
 
     public get joinedAt(): Date | undefined {
-        return "joined_at" in this.data ? this.data.joined_at ? new Date(this.data.joined_at) : undefined : undefined;
+        return "joined_at" in this.data ? this.data.joined_at && this.data.joined_at ? new Date(this.data.joined_at) : undefined : undefined;
     }
 
     public get premiumSince(): Date | undefined {
-        return "premium_since" in this.data ? this.data.premium_since ? new Date(this.data.premium_since) : undefined : undefined;
+        return "premium_since" in this.data ? this.data.premium_since && this.data.premium_since ? new Date(this.data.premium_since) : undefined : undefined;
     }
 
     public get communicationDisabledUntilTimestamp(): number | null {
-        return "communication_disabled_until" in this.data ? Date.parse(this.data.communication_disabled_until!) : null;
+        return "communication_disabled_until" in this.data && this.data.communication_disabled_until ? Date.parse(this.data.communication_disabled_until) : null;
     }
 
     public get communicationDisabledUntil(): Date | null {
         return this.communicationDisabledUntilTimestamp ? new Date(this.communicationDisabledUntilTimestamp) : null;
     }
 
-    public iconURL(options?: BaseImageURLOptions): string | null | undefined {
-        return this.data.avatar && this.client.rest.cdn.icon(this.id, this.data.avatar, options);
+    public iconURL(options?: BaseImageURLOptions): string | null {
+        return "avatar" in this.data && this.data.avatar ? this.client.rest.cdn.icon(this.id, this.data.avatar, options) : null;
     }
 
     public async resolveRoles(): Promise<Role[]> {
