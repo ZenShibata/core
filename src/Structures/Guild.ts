@@ -53,6 +53,10 @@ export class Guild extends Base<APIGuild | GatewayGuildCreateDispatchData> {
         return this.data.premium_tier;
     }
 
+    public get premiumSubscriptionCount(): number | undefined {
+        return this.data.premium_subscription_count;
+    }
+
     public get widgetEnabled(): boolean {
         return Boolean(this.data.widget_enabled);
     }

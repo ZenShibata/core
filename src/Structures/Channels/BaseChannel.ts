@@ -24,6 +24,14 @@ export class BaseChannel extends Base<APIChannel> {
         return this.data.flags;
     }
 
+    public get position(): number | undefined {
+        return "position" in this.data ? this.data.position : undefined;
+    }
+
+    public get parentId(): string | undefined {
+        return "parent_id" in this.data ? this.data.parent_id ?? undefined : undefined;
+    }
+
     public async send(options: RESTPostAPIChannelMessageJSONBody): Promise<Message> {
         return this.client.sendMessage(options, this.id);
     }
