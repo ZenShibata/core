@@ -1,7 +1,6 @@
 import { APIGuild, GatewayGuildCreateDispatchData, GuildDefaultMessageNotifications, GuildExplicitContentFilter, GuildFeature, GuildMFALevel, GuildPremiumTier } from "discord-api-types/v10";
 import { Base } from "./Base.js";
 import { BaseImageURLOptions } from "@discordjs/rest";
-import { cast } from "@sapphire/utilities";
 import { DiscordSnowflake } from "@sapphire/snowflake";
 
 export class Guild extends Base<APIGuild | GatewayGuildCreateDispatchData> {
@@ -74,7 +73,7 @@ export class Guild extends Base<APIGuild | GatewayGuildCreateDispatchData> {
     }
 
     public get createdTimestamp(): number {
-        return cast<number>(DiscordSnowflake.deconstruct(this.id).timestamp);
+        return Number(DiscordSnowflake.deconstruct(this.id).timestamp);
     }
 
     public get createdAt(): Date {

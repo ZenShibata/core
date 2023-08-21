@@ -33,7 +33,7 @@ export class User extends Base<APIUser> {
     }
 
     public get tag(): string {
-        return `${this.username}#${this.discriminator}`;
+        return `${this.username}${this.discriminator === "0" ? "" : `#${this.discriminator}`}`;
     }
 
     public get createdTimestamp(): number {
@@ -58,5 +58,9 @@ export class User extends Base<APIUser> {
 
     public bannerURL(options?: ImageURLOptions): string | null {
         return this.banner ? this.client.rest.cdn.banner(this.id, this.banner, options) : null;
+    }
+
+    public toString(): string {
+        return `<@${this.id}>`;
     }
 }

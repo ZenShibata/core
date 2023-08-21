@@ -106,4 +106,8 @@ export class BaseChannel extends Base<APIChannel> {
             return this.client.resolveGuild({ id: this.guildId, force, cache });
         }
     }
+
+    public toString(): string {
+        return `<#${this.id}>`;
+    }
 }

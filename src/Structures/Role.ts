@@ -22,4 +22,8 @@ export class Role extends Base<APIRole> {
     public get position(): number {
         return this.data.position;
     }
+
+    public toString(): string {
+        return `<@&${this.id}>`;
+    }
 }

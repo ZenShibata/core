@@ -86,4 +86,8 @@ export class GuildMember extends Base<APIGuildMember | GatewayGuildMemberRemoveD
             return this.client.resolveVoiceState({ id: this.id, guildId: this.guildId });
         }
     }
+
+    public toString(): string {
+        return `<@!${this.id}>`;
+    }
 }
