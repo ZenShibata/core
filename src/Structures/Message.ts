@@ -46,6 +46,22 @@ export class Message extends Base<APIMessage | GatewayMessageCreateDispatchData 
         return "components" in this.data ? this.data.components ?? [] : [];
     }
 
+    public get mentionUsers(): APIMessage["mentions"] {
+        return "mentions" in this.data ? this.data.mentions : [];
+    }
+
+    public get mentionChannels(): APIMessage["mention_channels"] {
+        return "mention_channels" in this.data ? this.data.mention_channels : [];
+    }
+
+    public get mentionRoles(): APIMessage["mention_roles"] {
+        return "mention_roles" in this.data ? this.data.mention_roles : [];
+    }
+
+    public get mentionEveryone(): boolean | undefined {
+        return "mention_everyone" in this.data ? this.data.mention_everyone : undefined;
+    }
+
     public async resolveGuild({ force = false, cache = true }: { force?: boolean; cache?: boolean }): Promise<Guild | undefined> {
         if (this.guildId) {
             return this.client.resolveGuild({ id: this.guildId, force, cache });
