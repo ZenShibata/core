@@ -63,12 +63,7 @@ export class Client extends EventEmitter {
         });
     }
 
-    public async resolveMember({ force, cache, id, guildId }: { force?: boolean | undefined; cache?: boolean | undefined; id: string; guildId: string }): Promise<GuildMember | undefined> {
-        const cached_member = await this.redis.get(GenKey(this.clientId, RedisKey.MEMBER_KEY, id, guildId));
-        if (cached_member) {
-            return new GuildMember({ ...JSON.parse(cached_member), id, guild_id: guildId }, this);
-        }
-
+    public async resolveMember({ force = false, cache, id, guildId }: { force?: boolean | undefined; cache?: boolean | undefined; id: string; guildId: string }): Promise<GuildMember | undefined> {
         if (force) {
             const member = await Result.fromAsync(() => this.rest.get(Routes.guildMember(guildId, id)));
             if (member.isOk()) {
@@ -76,14 +71,14 @@ export class Client extends EventEmitter {
                 return new GuildMember({ ...member.unwrap() as APIGuildMember | GatewayGuildMemberRemoveDispatchData, id, guild_id: guildId }, this);
             }
         }
+
+        const cached_member = await this.redis.get(GenKey(this.clientId, RedisKey.MEMBER_KEY, id, guildId));
+        if (cached_member) {
+            return new GuildMember({ ...JSON.parse(cached_member), id, guild_id: guildId }, this);
+        }
     }
 
-    public async resolveUser({ force, cache, id }: { force?: boolean | undefined; cache?: boolean | undefined; id: string }): Promise<User | undefined> {
-        const cached_user = await this.redis.get(GenKey(this.clientId, RedisKey.USER_KEY, id));
-        if (cached_user) {
-            return new User({ ...JSON.parse(cached_user), id }, this);
-        }
-
+    public async resolveUser({ force = false, cache, id }: { force?: boolean | undefined; cache?: boolean | undefined; id: string }): Promise<User | undefined> {
         if (force) {
             const user = await Result.fromAsync(() => this.rest.get(Routes.user(id)));
             if (user.isOk()) {
@@ -92,14 +87,14 @@ export class Client extends EventEmitter {
                 return new User({ ...user_value, id }, this);
             }
         }
+
+        const cached_user = await this.redis.get(GenKey(this.clientId, RedisKey.USER_KEY, id));
+        if (cached_user) {
+            return new User({ ...JSON.parse(cached_user), id }, this);
+        }
     }
 
-    public async resolveGuild({ force, cache, id }: { force?: boolean | undefined; cache?: boolean | undefined; id: string }): Promise<Guild | undefined> {
-        const cached_guild = await this.redis.get(GenKey(this.clientId, RedisKey.GUILD_KEY, id));
-        if (cached_guild) {
-            return new Guild({ ...JSON.parse(cached_guild), id }, this);
-        }
-
+    public async resolveGuild({ force = false, cache, id }: { force?: boolean | undefined; cache?: boolean | undefined; id: string }): Promise<Guild | undefined> {
         if (force) {
             const guild = await Result.fromAsync(() => this.rest.get(Routes.guild(id)));
             if (guild.isOk()) {
@@ -107,6 +102,11 @@ export class Client extends EventEmitter {
                 if (cache) await this.redis.set(GenKey(this.clientId, RedisKey.GUILD_KEY, id), JSON.stringify(guild_value));
                 return new Guild({ ...guild_value, id }, this);
             }
+        }
+
+        const cached_guild = await this.redis.get(GenKey(this.clientId, RedisKey.GUILD_KEY, id));
+        if (cached_guild) {
+            return new Guild({ ...JSON.parse(cached_guild), id }, this);
         }
     }
 
@@ -124,20 +124,7 @@ export class Client extends EventEmitter {
         }
     }
 
-    public async resolveChannel({ force, cache, id, guildId }: { force?: boolean | undefined; cache?: boolean | undefined; id: string; guildId: string }): Promise<BaseChannel | undefined> {
-        const cached_user = await this.redis.get(GenKey(this.clientId, RedisKey.CHANNEL_KEY, id, guildId));
-        if (cached_user) {
-            const channel_value = JSON.parse(cached_user) as APIChannel;
-            switch (channel_value.type) {
-                case ChannelType.GuildStageVoice:
-                case ChannelType.GuildVoice:
-                    return new VoiceChannel({ ...channel_value, id, guild_id: guildId }, this);
-                default: {
-                    return new TextChannel({ ...channel_value, id, guild_id: guildId }, this);
-                }
-            }
-        }
-
+    public async resolveChannel({ force = false, cache, id, guildId }: { force?: boolean | undefined; cache?: boolean | undefined; id: string; guildId: string }): Promise<BaseChannel | undefined> {
         if (force) {
             const channel = await Result.fromAsync(() => this.rest.get(Routes.channel(id)));
             if (channel.isOk()) {
@@ -150,6 +137,19 @@ export class Client extends EventEmitter {
                     default: {
                         return new TextChannel({ ...channel_value, id, guild_id: guildId }, this);
                     }
+                }
+            }
+        }
+
+        const cached_user = await this.redis.get(GenKey(this.clientId, RedisKey.CHANNEL_KEY, id, guildId));
+        if (cached_user) {
+            const channel_value = JSON.parse(cached_user) as APIChannel;
+            switch (channel_value.type) {
+                case ChannelType.GuildStageVoice:
+                case ChannelType.GuildVoice:
+                    return new VoiceChannel({ ...channel_value, id, guild_id: guildId }, this);
+                default: {
+                    return new TextChannel({ ...channel_value, id, guild_id: guildId }, this);
                 }
             }
         }
