@@ -76,6 +76,8 @@ export class Client extends EventEmitter {
         if (cached_member) {
             return new GuildMember({ ...JSON.parse(cached_member), id, guild_id: guildId }, this);
         }
+
+        return this.resolveMember({ id, guildId, force: true, cache: true });
     }
 
     public async resolveUser({ force = false, cache, id }: { force?: boolean | undefined; cache?: boolean | undefined; id: string }): Promise<User | undefined> {
@@ -92,6 +94,8 @@ export class Client extends EventEmitter {
         if (cached_user) {
             return new User({ ...JSON.parse(cached_user), id }, this);
         }
+
+        return this.resolveUser({ id, force: true, cache: true });
     }
 
     public async resolveGuild({ force = false, cache, id }: { force?: boolean | undefined; cache?: boolean | undefined; id: string }): Promise<Guild | undefined> {
@@ -108,6 +112,8 @@ export class Client extends EventEmitter {
         if (cached_guild) {
             return new Guild({ ...JSON.parse(cached_guild), id }, this);
         }
+
+        return this.resolveGuild({ id, force: true, cache: true });
     }
 
     public async resolveRole({ id, guildId }: { id: string; guildId: string }): Promise<Role | undefined> {
@@ -153,6 +159,8 @@ export class Client extends EventEmitter {
                 }
             }
         }
+
+        return this.resolveChannel({ id, guildId, force: true, cache: true });
     }
 
     public async sendMessage(options: RESTPostAPIChannelMessageJSONBody, channelId: string): Promise<Message> {
